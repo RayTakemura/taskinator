@@ -1,7 +1,11 @@
 var taskIdCounter = 0;
 var formEl = document.querySelector("#task-form");
 var tasksToDoEl = document.querySelector("#tasks-to-do");
+var pageContentEl = document.querySelector("#page-content");
 
+// This function takes the string that was inputted by the user
+// Once the string is checked that it's not null, they're put into an array
+// It sends the array to createTaskEl function, and resets the form
 var taskFormHandler = function() {
     event.preventDefault(); //ask later :(
     var taskNameInput = document.querySelector("input[name='task-name']").value;
@@ -22,6 +26,11 @@ var taskFormHandler = function() {
     formEl.reset();
 };
 
+
+// This function creates a list element that holds a div 
+// which holds h3 and span elemnts that describes the task.
+// Later, it calls the createTaskActions function to also
+// put the task action buttons inside the list element.
 var createTaskEl = function(taskDataObj) {
     // create list item
     var listItemEl = document.createElement("li");
@@ -47,6 +56,7 @@ var createTaskEl = function(taskDataObj) {
     taskIdCounter++;
 };
 
+// Creates edit and delete button. Also creates a drop down selector with 3 status types.
 var createTaskActions = function(taskId) {
     var actionContainerEl = document.createElement("div");
     actionContainerEl.className = "task-actions";
@@ -90,3 +100,20 @@ var createTaskActions = function(taskId) {
 };
 
 formEl.addEventListener("submit", taskFormHandler);
+
+var deleteTask = function(taskId) {
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+    taskSelected.remove();
+};
+
+var taskButtonHandler = function(event) {
+    console.log(event.target);
+
+    if (event.target.matches(".delete-btn")) {
+        // get the element's task id
+        var taskId = event.target.getAttribute("data-task-id");
+        deleteTask(taskId);
+    }
+};
+
+pageContentEl.addEventListener("click" , taskButtonHandler);
