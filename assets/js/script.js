@@ -1,10 +1,11 @@
 var taskIdCounter = 0;
+
+var tasks = [];
 var formEl = document.querySelector("#task-form");
 var tasksToDoEl = document.querySelector("#tasks-to-do");
 var pageContentEl = document.querySelector("#page-content");
 var tasksInProgressEl = document.querySelector("#tasks-in-progress");
 var tasksCompletedEl = document.querySelector("#tasks-completed");
-
 
 // This function takes the string that was inputted by the user
 // Once the string is checked that it's not null, they're put into an array
@@ -25,9 +26,11 @@ var taskFormHandler = function(event) {
         var taskId = formEl.getAttribute("data-task-id");
         completeEditTask(taskNameInput, taskTypeInput, taskId);
     } else {
+
         var taskDataObj = {
             name: taskNameInput,
-            type: taskTypeInput
+            type: taskTypeInput,
+            status: "to do"
         };
 
         createTaskEl(taskDataObj);
@@ -37,10 +40,11 @@ var taskFormHandler = function(event) {
 };
 
 
-// This function creates a list element that holds a div 
-// which holds h3 and span elemnts that describes the task.
-// Later, it calls the createTaskActions function to also
-// put the task action buttons inside the list element.
+/**
+ * This function creates a list element that holds a div which holds h3 and span elemnts that describes the task.
+ * Later, it calls the createTaskActions function to also put the task action buttons inside the list element.
+ * @param {*} taskDataObj The task object. It has a name, type, status, and id.
+ */
 var createTaskEl = function(taskDataObj) {
     // create list item
     var listItemEl = document.createElement("li");
@@ -63,10 +67,19 @@ var createTaskEl = function(taskDataObj) {
     // add entire list item to list
     tasksToDoEl.appendChild(listItemEl);
 
+    // create new id attribute to the object and set it to the id number of taskIdCounter
+    taskDataObj.id = taskIdCounter;
+
+    // push the object to the tasks array
+    tasks.push(taskDataObj);
+
     taskIdCounter++;
 };
 
-// Creates edit and delete button. Also creates a drop down selector with 3 status types.
+/**
+ * Creates edit and delete button. Also creates a drop down selector with 3 status types.
+ * @param {*} taskId 
+ */
 var createTaskActions = function(taskId) {
     var actionContainerEl = document.createElement("div");
     actionContainerEl.className = "task-actions";
@@ -109,18 +122,31 @@ var createTaskActions = function(taskId) {
     return actionContainerEl;
 };
 
-
+/**
+ * Completes the editting of a task object.
+ * 
+ * @param {*} taskName name of the task.
+ * @param {*} taskType type of the task.
+ * @param {*} taskId ID number of the task.
+ */
 var completeEditTask = function(taskName, taskType, taskId){
     var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
 
     taskSelected.querySelector("h3.task-name").textContent = taskName;
     taskSelected.querySelector("span.task-type").textContent = taskType;
 
+    for (var i = 0; i < tasks.length; i++) {
+        if (tasks[i].id === parseInt(taskId)) {
+            tasks[i].name = taskName;
+            tasks[i].type = taskType;
+        }
+    }
+
     alert("Task Updated!");
 
     formEl.removeAttribute("data-task-id");
     document.querySelector("#save-task").textContent = "Add Task";
-}
+};
 
 
 var taskButtonHandler = function(event) {
@@ -136,6 +162,10 @@ var taskButtonHandler = function(event) {
     }
 };
 
+/**
+ * Changes the status of the targetted task. The options are: To Do, In Progress, and Completed.
+ * @param {event} event Event for drop down menu. It should be "change".
+ */
 var taskStatusChangeHandler = function(event) {
     
     // get the task item's id
