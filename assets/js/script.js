@@ -2,12 +2,15 @@ var taskIdCounter = 0;
 var formEl = document.querySelector("#task-form");
 var tasksToDoEl = document.querySelector("#tasks-to-do");
 var pageContentEl = document.querySelector("#page-content");
+var tasksInProgressEl = document.querySelector("#tasks-in-progress");
+var tasksCompletedEl = document.querySelector("#tasks-completed");
+
 
 // This function takes the string that was inputted by the user
 // Once the string is checked that it's not null, they're put into an array
 // It sends the array to createTaskEl function, and resets the form
-var taskFormHandler = function() {
-    event.preventDefault(); //ask later :(
+var taskFormHandler = function(event) {
+    event.preventDefault(); //e.preventDefault(); didnt work
     var taskNameInput = document.querySelector("input[name='task-name']").value;
     var taskTypeInput = document.querySelector("select[name='task-type']").value;
 
@@ -16,13 +19,20 @@ var taskFormHandler = function() {
         return false;
     }
 
-    var taskDataObj = {
-        name: taskNameInput,
-        type: taskTypeInput
-    };
+    var isEdit = formEl.hasAttribute("data-task-id");
 
+    if (isEdit) {
+        var taskId = formEl.getAttribute("data-task-id");
+        completeEditTask(taskNameInput, taskTypeInput, taskId);
+    } else {
+        var taskDataObj = {
+            name: taskNameInput,
+            type: taskTypeInput
+        };
+
+        createTaskEl(taskDataObj);
+    }
     // sent it as an argument to createTaskEl
-    createTaskEl(taskDataObj);
     formEl.reset();
 };
 
@@ -90,7 +100,7 @@ var createTaskActions = function(taskId) {
         // create option element
         var statusOptionEl = document.createElement("option");
         statusOptionEl.textContent = statusChoices[i];
-        statusOptionEl.setAttribute("value", statusOptionEl[i]);
+        statusOptionEl.setAttribute("value", statusChoices[i]);
 
         // append to select
         statusSelectEl.appendChild(statusOptionEl);
@@ -99,21 +109,73 @@ var createTaskActions = function(taskId) {
     return actionContainerEl;
 };
 
-formEl.addEventListener("submit", taskFormHandler);
+
+var completeEditTask = function(taskName, taskType, taskId){
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+
+    taskSelected.querySelector("h3.task-name").textContent = taskName;
+    taskSelected.querySelector("span.task-type").textContent = taskType;
+
+    alert("Task Updated!");
+
+    formEl.removeAttribute("data-task-id");
+    document.querySelector("#save-task").textContent = "Add Task";
+}
+
+
+var taskButtonHandler = function(event) {
+    //console.log(event.target);
+
+    if (event.target.matches(".delete-btn")) {
+        // get the element's task id
+        var taskId = event.target.getAttribute("data-task-id");
+        deleteTask(taskId);
+    } else if (event.target.matches(".edit-btn")){
+        var taskId = event.target.getAttribute("data-task-id");
+        editTask(taskId);
+    }
+};
+
+var taskStatusChangeHandler = function(event) {
+    
+    // get the task item's id
+    var taskId = event.target.getAttribute("data-task-id");
+
+    // get the currently selected option's value and conver to lowercase
+    var statusValue = event.target.value.toLowerCase();
+
+    // find the parent task item element based on the id
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+
+    // appendChild function 'moves' the elements. It doesn't copy.
+   if (statusValue === "to do") {
+       tasksToDoEl.appendChild(taskSelected);
+   } else if (statusValue === "in progress") {
+       
+       tasksInProgressEl.appendChild(taskSelected);
+   } else if (statusValue === "completed") {
+       tasksCompletedEl.appendChild(taskSelected);
+   }
+};
+
+var editTask = function(taskId) {
+    var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+    var taskName = taskSelected.querySelector("h3.task-name").textContent;
+    var taskType = taskSelected.querySelector("span.task-type").textContent;
+    document.querySelector("input[name='task-name']").value = taskName;
+    document.querySelector("select[name='task-type']").value = taskType;
+    document.querySelector("#save-task").textContent = "Save Task";
+    formEl.setAttribute("data-task-id", taskId);
+};
 
 var deleteTask = function(taskId) {
     var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
     taskSelected.remove();
 };
 
-var taskButtonHandler = function(event) {
-    console.log(event.target);
 
-    if (event.target.matches(".delete-btn")) {
-        // get the element's task id
-        var taskId = event.target.getAttribute("data-task-id");
-        deleteTask(taskId);
-    }
-};
+formEl.addEventListener("submit", taskFormHandler);
 
 pageContentEl.addEventListener("click" , taskButtonHandler);
+
+pageContentEl.addEventListener("change", taskStatusChangeHandler);
